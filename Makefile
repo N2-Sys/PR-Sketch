@@ -1,0 +1,205 @@
+###################
+# Global Variable #
+###################
+
+INCLUDE_DIR = ./include
+LIB_DIR = ./lib
+
+CC = g++
+CFLAGS = -Wall -std=c++11 -O3 -mavx2 -c -g # -mavx512f -mavx512cd -mavx512pf -mavx512er #-fno-omit-frame-pointer -O3 -mavx2
+CPPFLAGS = -I$(INCLUDE_DIR) # -D TRACE_DIR_RAM 
+LFLAGS = -L$(LIB_DIR) -lpthread -lrt -lpcap -lm -liniparser
+OUTPUT_OPTIONS = -o $@
+
+################
+# Pcap Process #
+################
+
+PCAP_PROCESS_ROOT_DIR = ./pcap_process
+
+# Common Module #
+
+PCAP_PROCESS_COMMON_DIR = $(PCAP_PROCESS_ROOT_DIR)/common
+PCAP_PROCESS_COMMON_SRC = $(wildcard $(PCAP_PROCESS_COMMON_DIR)/*.c)
+TOTAL_SRC += $(PCAP_PROCESS_COMMON_SRC)
+PCAP_PROCESS_COMMON_OBJ = $(patsubst %.c,%.o,$(PCAP_PROCESS_COMMON_SRC))
+
+# Preprocess Module #
+
+PCAP_PROCESS_PREPROCESS_DIR = $(PCAP_PROCESS_ROOT_DIR)/preprocess
+PCAP_PROCESS_PREPROCESS_SRC = $(wildcard $(PCAP_PROCESS_PREPROCESS_DIR)/*.c)
+TOTAL_SRC += $(PCAP_PROCESS_PREPROCESS_SRC)
+PCAP_PROCESS_PREPROCESS_OBJ = $(patsubst %.c,%.o,$(PCAP_PROCESS_PREPROCESS_SRC))
+
+# Measure Module #
+
+PCAP_PROCESS_MEASURE_DIR = $(PCAP_PROCESS_ROOT_DIR)/measure
+PCAP_PROCESS_MEASURE_SRC = $(wildcard $(PCAP_PROCESS_MEASURE_DIR)/*.c)
+TOTAL_SRC += $(PCAP_PROCESS_MEASURE_SRC)
+PCAP_PROCESS_MEASURE_OBJ = $(patsubst %.c,%.o,$(PCAP_PROCESS_MEASURE_SRC))
+
+# Exec  Module #
+
+PCAP_PROCESS_EXEC_DIR = $(PCAP_PROCESS_ROOT_DIR)/exec
+PCAP_PROCESS_EXEC_SRC = $(wildcard $(PCAP_PROCESS_EXEC_DIR)/*.c)
+TOTAL_SRC += $(PCAP_PROCESS_EXEC_SRC)
+PCAP_PROCESS_RAW_EXEC = $(patsubst %.c,%,$(PCAP_PROCESS_EXEC_SRC))
+#PCAP_PROCESS_NOTDIR_EXEC = $(notdir $(PCAP_PROCESS_RAW_EXEC))
+#PCAP_PROCESS_EXEC = $(addprefix $(PCAP_PROCESS_ROOT_DIR)/, $(PCAP_PROCESS_NOTDIR_EXEC))
+PCAP_PROCESS_EXEC = $(notdir $(PCAP_PROCESS_RAW_EXEC))
+
+dataset_split: $(PCAP_PROCESS_EXEC_DIR)/dataset_split.o $(PCAP_PROCESS_COMMON_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+trace_preprocess: $(PCAP_PROCESS_EXEC_DIR)/trace_preprocess.o $(PCAP_PROCESS_PREPROCESS_OBJ) $(PCAP_PROCESS_COMMON_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+traffic_aggregate: $(PCAP_PROCESS_EXEC_DIR)/traffic_aggregate.o $(PCAP_PROCESS_MEASURE_OBJ) $(PCAP_PROCESS_COMMON_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+matrix_measure: $(PCAP_PROCESS_EXEC_DIR)/matrix_measure.o $(PCAP_PROCESS_MEASURE_OBJ) $(PCAP_PROCESS_COMMON_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+matrix_analyse: $(PCAP_PROCESS_EXEC_DIR)/matrix_analyse.o $(PCAP_PROCESS_MEASURE_OBJ) $(PCAP_PROCESS_COMMON_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+#############
+# Sketching #
+#############
+
+SKETCHING_ROOT_DIR = ./sketching
+
+# Utils Module #
+
+SKETCHING_UTILS_DIR = $(SKETCHING_ROOT_DIR)/utils
+SKETCHING_UTILS_SRC = $(wildcard $(SKETCHING_UTILS_DIR)/*.c)
+TOTAL_SRC += $(SKETCHING_UTILS_SRC)
+SKETCHING_UTILS_OBJ = $(patsubst %.c,%.o,$(SKETCHING_UTILS_SRC))
+
+# Metric Module #
+
+SKETCHING_METRIC_DIR = $(SKETCHING_ROOT_DIR)/metric
+SKETCHING_METRIC_SRC = $(wildcard $(SKETCHING_METRIC_DIR)/*.c)
+TOTAL_SRC += $(SKETCHING_METRIC_SRC)
+SKETCHING_METRIC_OBJ = $(patsubst %.c,%.o,$(SKETCHING_METRIC_SRC))
+
+# Tuple Module #
+
+SKETCHING_TUPLE_DIR = $(SKETCHING_ROOT_DIR)/tuple
+SKETCHING_TUPLE_SRC = $(wildcard $(SKETCHING_TUPLE_DIR)/*.c)
+TOTAL_SRC += $(SKETCHING_TUPLE_SRC)
+SKETCHING_TUPLE_OBJ = $(patsubst %.c,%.o,$(SKETCHING_TUPLE_SRC))
+
+# Hash Module #
+
+SKETCHING_HASH_DIR = $(SKETCHING_ROOT_DIR)/hash
+SKETCHING_HASH_SRC = $(wildcard $(SKETCHING_HASH_DIR)/*.c)
+TOTAL_SRC += $(SKETCHING_HASH_SRC)
+SKETCHING_HASH_OBJ = $(patsubst %.c,%.o,$(SKETCHING_HASH_SRC))
+
+# ALGORITHM Module #
+
+SKETCHING_ALGORITHM_DIR = $(SKETCHING_ROOT_DIR)/algorithm
+SKETCHING_ALGORITHM_SRC = $(wildcard $(SKETCHING_ALGORITHM_DIR)/*.c)
+TOTAL_SRC += $(SKETCHING_ALGORITHM_SRC)
+SKETCHING_ALGORITHM_OBJ = $(patsubst %.c,%.o,$(SKETCHING_ALGORITHM_SRC))
+
+# Exec  Module #
+
+SKETCHING_EXEC_DIR = $(SKETCHING_ROOT_DIR)/exec
+SKETCHING_EXEC_SRC = $(wildcard $(SKETCHING_EXEC_DIR)/*.c)
+TOTAL_SRC += $(SKETCHING_EXEC_SRC)
+SKETCHING_RAW_EXEC = $(patsubst %.c,%,$(SKETCHING_EXEC_SRC))
+SKETCHING_EXEC = $(notdir $(SKETCHING_RAW_EXEC))
+
+elastic_sketch_test: $(SKETCHING_EXEC_DIR)/elastic_sketch_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+MV_sketch_test: $(SKETCHING_EXEC_DIR)/MV_sketch_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+LD_sketch_test: $(SKETCHING_EXEC_DIR)/LD_sketch_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+CM_sketch_test: $(SKETCHING_EXEC_DIR)/CM_sketch_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+univmon_test: $(SKETCHING_EXEC_DIR)/univmon_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+deltoid_test: $(SKETCHING_EXEC_DIR)/deltoid_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+MRAC_test: $(SKETCHING_EXEC_DIR)/MRAC_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+flowradar_test: $(SKETCHING_EXEC_DIR)/flowradar_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+pr_sketch_test: $(SKETCHING_EXEC_DIR)/pr_sketch_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+fastpr_sketch_test: $(SKETCHING_EXEC_DIR)/fastpr_sketch_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+lossy_counting_test: $(SKETCHING_EXEC_DIR)/lossy_counting_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+cmheap_test: $(SKETCHING_EXEC_DIR)/cmheap_test.o $(SKETCHING_ALGORITHM_OBJ) $(SKETCHING_HASH_OBJ) $(SKETCHING_TUPLE_OBJ) $(SKETCHING_UTILS_OBJ) $(SKETCHING_METRIC_OBJ)
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+powerlaw_gen: $(SKETCHING_EXEC_DIR)/powerlaw_gen.o $(SKETCHING_UTILS_DIR)/util.o
+	$(CC) $^ $(OUTPUT_OPTIONS) $(LFLAGS)
+
+#####################
+# Auto Dependencies #
+#####################
+
+TOTAL_OBJ = $(patsubst %.c,%.o,$(TOTAL_SRC))
+TOTAL_DEP = $(patsubst %.c,%.d,$(TOTAL_SRC))
+include $(TOTAL_DEP)
+
+%.d: %.c
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$;
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OUTPUT_OPTIONS) $<
+
+clean:
+	@echo $(TOTAL_DEP)
+	@echo clean the project...
+	-rm -f $(EXEC)
+	-rm -f $(TOTAL_OBJ) $(TOTAL_DEP)
+	@echo clean success!
+
+pcap: $(PCAP_PROCESS_EXEC)
+	-rm -f $(TOTAL_OBJ) $(TOTAL_DEP)
+
+sketching: $(SKETCHING_EXEC)
+	-rm -f $(TOTAL_OBJ) $(TOTAL_DEP)
+
+all: $(PCAP_PROCESS_EXEC) $(SKETCHING_EXEC)
+	-rm -f $(TOTAL_OBJ) $(TOTAL_DEP)
+
+.PHONY: clean
+
+##############################
+# Python Module (Deprecated) #
+##############################
+
+PY_INCLUDE_DIR = ./intelpython3/include/python3.6m
+PY_CC = gcc
+PY_CFLAGS = -fPIC -shared
+PY_CPPFLAGS = -I$(INCLUDE_DIR) -I$(PY_INCLUDE_DIR)
+PY_OUTPUT_OPTIONS = -o $@
+
+PY_DIR = ./pys/c
+
+PY_SRC = $(wildcard $(PY_DIR)/*.c)
+PY_SO = $(patsubst %.c,%.so,$(PY_SRC))
+
+%.so: %.c
+	$(PY_CC) $(PY_CFLAGS) $(PY_CPPFLAGS) $(PY_OUTPUT_OPTIONS) $<
+
+pyall: $(PY_SO)
+	@echo $(PY_SO) generated.
